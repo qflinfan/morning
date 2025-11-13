@@ -1,10 +1,8 @@
 name: auto-checkin
 on:
   schedule:
-    # 定时时间：UTC时区 20:00 → 北京时间 04:00（可按需修改）
-    # cron格式：分 时 日 月 周（示例：想北京时间8点签到 → 改为 0 20 * * *）
-    - cron: '0 20 * * *'
-  workflow_dispatch:  # 支持手动触发测试
+    - cron: '0 20 * * *'  # UTC时间20:00 → 北京时间04:00（可修改）
+  workflow_dispatch:
 
 jobs:
   checkin-job:
@@ -12,18 +10,22 @@ jobs:
     name: 自动签到任务
 
     steps:
+      # 第一步：拉取仓库代码到运行环境（关键！必须加）
+      - name: 拉取仓库代码
+        uses: actions/checkout@v4  # 最新版本，确保能拉取代码
+
       - name: 配置Python环境
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'  # 稳定版本，兼容requests
+          python-version: '3.9'  # 稳定版本
           architecture: 'x64'
 
       - name: 安装依赖并执行签到
         run: |
-          pip install requests  # 安装核心依赖
-          python main.py  # 运行签到脚本
+          python -m pip install --upgrade pip
+          pip install requests -i https://pypi.tuna.tsinghua.edu.cn/simple
+          python main.py  # 现在能找到main.py了
 
     env:
-      # 从GitHub Secrets读取敏感信息，避免硬编码
       AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
-      CHECKIN_URL: "https://api-mi.xsot.cn/user/checkin"  # 固定签到接口地址
+      CHECKIN_URL: "https://api-mi.xsot.cn/user/checkin"
