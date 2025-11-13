@@ -1,53 +1,15 @@
-from datetime import date, datetime
-import math
-from wechatpy import WeChatClient
-from wechatpy.client.api import WeChatMessage, WeChatTemplate
 import requests
-import os
-import random
+import time
 
-today = datetime.now()
-start_date = os.environ['START_DATE']
-city = os.environ['CITY']
-birthday = os.environ['BIRTHDAY']
+url = "https://api-mi.xsot.cn/user/checkin"
+headers = {
+    "Authorization": "Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ4Y3NvZnQtbWktbWluaWFwcCIsImlhdCI6MTc2MzAwMDMyOCwiaWQiOjQzNywiZW1haWwiOiIiLCJyb2xlIjowfQ.vcHN9KLTaWUZ36PEilzwJMCb2DX_neM3_dOwLTiUI23pKwO0-eNrhMt-OdC4VWhQF2bUJdn_gGYGI7kRnyRSwA",
+    "Content-Type": "application/json",
+    "platform": "mp-weixin",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 MicroMessenger/7.0.20.1781(0x6700143B) NetType/WIFI MiniProgramEnv/Windows WindowsWechat/WMPF WindowsWechat(0x63090a13) UnifiedPCWindowsWechat(0xf2541211) XWEB/16815"
+}
+data = {}  # 请求体
 
-app_id = os.environ["APP_ID"]
-app_secret = os.environ["APP_SECRET"]
-
-user_id = os.environ["USER_ID"]
-template_id = os.environ["TEMPLATE_ID"]
-
-
-def get_weather():
-  url = "http://autodev.openspeech.cn/csp/api/v2.1/weather?openId=aiuicus&clientType=android&sign=android&city=" + city
-  res = requests.get(url).json()
-  weather = res['data']['list'][0]
-  return weather['weather'], math.floor(weather['temp']), math.floor(weather['high']), math.floor(weather['low'])
-
-def get_count():
-  delta = today - datetime.strptime(start_date, "%Y-%m-%d")
-  return delta.days
-
-def get_birthday():
-  next = datetime.strptime(str(date.today().year) + "-" + birthday, "%Y-%m-%d")
-  if next < datetime.now():
-    next = next.replace(year=next.year + 1)
-  return (next - today).days
-
-def get_words():
-  words = requests.get("https://api.shadiao.pro/chp")
-  if words.status_code != 200:
-    return get_words()
-  return words.json()['data']['text']
-
-def get_random_color():
-  return "#%06x" % random.randint(0, 0xFFFFFF)
-
-
-client = WeChatClient(app_id, app_secret)
-
-wm = WeChatMessage(client)
-wea, temperature, highest, lowest = get_weather()
-data = {"city":{"value":city,"color":get_random_color()},"weather":{"value":wea,"color":get_random_color()},"temperature":{"value":temperature,"color":get_random_color()},"highest":{"value":highest,"color":get_random_color()},"lowest":{"value":lowest, "color":get_random_color()},"words":{"value":get_words(), "color":get_random_color()},"love_days":{"value":get_count(),"color":get_random_color()},"birthday_left":{"value":get_birthday(),"color":get_random_color()},"words":{"value":get_words(),"color":get_random_color()}}
-res = wm.send_template(user_id, template_id, data)
-print(res)
+# 发送请求
+response = requests.post(url, headers=headers, json=data)
+print("签到结果：", response.text)
