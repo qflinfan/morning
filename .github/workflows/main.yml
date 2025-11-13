@@ -1,32 +1,29 @@
-name: morning
+name: auto-checkin
 on:
   schedule:
-  - cron:  '20 23 * * *'
-  workflow_dispatch:
+    # 定时时间：UTC时区 20:00 → 北京时间 04:00（可按需修改）
+    # cron格式：分 时 日 月 周（示例：想北京时间8点签到 → 改为 0 20 * * *）
+    - cron: '0 20 * * *'
+  workflow_dispatch:  # 支持手动触发测试
 
 jobs:
-  send_message:
+  checkin-job:
     runs-on: ubuntu-latest
-    name: send morning to your girlfriend
+    name: 自动签到任务
 
     steps:
-    - name: checkout
-      uses: actions/checkout@v3
-      with:
-        ref: master
+      - name: 配置Python环境
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'  # 稳定版本，兼容requests
+          architecture: 'x64'
 
-    - name: sender
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-        architecture: 'x64'
-    - run: pip install -r ./requirements.txt && python ./main.py
+      - name: 安装依赖并执行签到
+        run: |
+          pip install requests  # 安装核心依赖
+          python main.py  # 运行签到脚本
 
     env:
-      APP_ID: ${{ secrets.APP_ID }}
-      APP_SECRET: ${{ secrets.APP_SECRET }}
-      TEMPLATE_ID: ${{ secrets.TEMPLATE_ID }}
-      USER_ID: ${{ secrets.USER_ID }}
-      START_DATE: ${{ secrets.START_DATE }}
-      BIRTHDAY: ${{ secrets.BIRTHDAY }}
-      CITY: ${{ secrets.CITY }}
+      # 从GitHub Secrets读取敏感信息，避免硬编码
+      AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
+      CHECKIN_URL: "https://api-mi.xsot.cn/user/checkin"  # 固定签到接口地址
